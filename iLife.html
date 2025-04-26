@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>คำนวณ TDEE และเปอร์เซ็นต์ไขมันในร่างกาย</title>
+  <style>
+ * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+  }
+  .container {
+    max-width: 500px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  h2, h3 {
+    text-align: center;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  @media (max-width: 600px) {
+    body {
+      padding: 10px;
+    }
+    .container {
+      padding: 15px;
+    }
+  }
+  #result {
+    display: none;
+  }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- ฟอร์มข้อมูลที่กรอก -->
+    <div id="form-container" class="form-container">
+      <h2>iLIFE container</h2>
+      <input id="weight" type="number" placeholder="น้ำหนัก" required />
+      <input id="height" type="number" placeholder="ส่วนสูง (เซนติเมตร)" required />
+      <input id="age" type="number" placeholder="อายุ" required />
+
+      <label for="gender">เพศ:</label>
+      <select id="gender" required>
+        <option value="">เลือกเพศ</option>
+        <option value="male">ผู้ชาย</option>
+        <option value="female">ผู้หญิง</option>
+      </select>
+
+      <label for="exercise">ระดับการออกกำลังกาย:</label>
+      <select id="exercise" required>
+        <option value="1.2">ไม่ออกกำลังกาย</option>
+        <option value="1.375">ออกกำลังกาย 1-3 ครั้งต่อสัปดาห์</option>
+        <option value="1.55">ออกกำลังกาย 4-5 ครั้งต่อสัปดาห์</option>
+        <option value="1.725">ออกกำลังกาย 6-7 ครั้งต่อสัปดาห์</option>
+        <option value="1.9">ออกกำลังกายวันละ 2 ครั้งขึ้นไป</option>
+      </select>
+
+      <button onclick="calculateResults()">คำนวณผลลัพธ์</button>
+    </div>
+
+    <!-- ผลลัพธ์การคำนวณ -->
+    <div id="result" class="result-container">
+      <h3>ผลลัพธ์:</h3>
+      <div id="result-output"></div>
+      <button onclick="goBack()">กลับไปกรอกข้อมูลใหม่</button>
+    </div>
+  </div>
+
+  <script>
+    function calculateResults() {
+      // รับข้อมูลจากฟอร์ม
+      const weight = parseFloat(document.getElementById("weight").value);
+      const height = parseFloat(document.getElementById("height").value) / 100; // แปลงเป็นเมตร
+      const age = parseInt(document.getElementById("age").value);
+      const gender = document.getElementById("gender").value;
+      const exerciseLevel = parseFloat(document.getElementById("exercise").value);
+
+      // ตรวจสอบการกรอกข้อมูล
+      if (!weight || !height || !age || !gender || !exerciseLevel) {
+        alert("กรุณากรอกข้อมูลทั้งหมด");
+        return;
+      }
+
+      // คำนวณ BMI
+      const bmi = weight / (height * height);
+
+      let bmr;
+      if (gender === "male") {
+        bmr = 66 + (13.7 * weight) + (5 * height * 100) - (6.8 * age); // สำหรับผู้ชาย
+      } else if (gender === "female") {
+        bmr = 665 + (9.6 * weight) + (1.8 * height * 100) - (4.7 * age); // สำหรับผู้หญิง
+      } else {
+        document.getElementById("result-output").innerText = "กรุณาเลือกเพศ";
+        return;
+      }
+
+      // คำนวณ TDEE
+      const tdee = bmr * exerciseLevel;
+
+      // คำนวณเปอร์เซ็นต์ไขมันในร่างกาย
+      let bodyFatPercentage;
+      if (gender === "male") {
+        bodyFatPercentage = (1.2 * bmi) + (0.23 * age) - 16.2;
+      } else {
+        bodyFatPercentage = (1.2 * bmi) + (0.23 * age) - 5.4;
+      }
+
+      // คำนวณโปรตีน, ไขมัน, คาร์โบไฮเดรตตาม TDEE
+      const protein = tdee * 0.2 / 4; // 20% ของ TDEE สำหรับโปรตีน
+      const fat = tdee * 0.25 / 9; // 25% ของ TDEE สำหรับไขมัน
+      const carbs = tdee * 0.55 / 4; // 55% ของ TDEE สำหรับคาร์โบไฮเดรต
+
+      // แสดงผล
+      document.getElementById("result-output").innerHTML = `
+        <p>TDEE: ${tdee.toFixed(2)} แคลอรี่</p>
+        <p>เปอร์เซ็นต์ไขมันในร่างกาย: ${bodyFatPercentage.toFixed(2)}%</p>
+        <p>โปรตีนที่ควรรับประทาน: ${protein.toFixed(2)} กรัม</p>
+        <p>ไขมันที่ควรรับประทาน: ${fat.toFixed(2)} กรัม</p>
+        <p>คาร์โบไฮเดรตที่ควรรับประทาน: ${carbs.toFixed(2)} กรัม</p>
+      `;
+
+      // ซ่อนฟอร์มและแสดงผลลัพธ์
+      document.getElementById("form-container").style.display = "none";
+      document.getElementById("result").style.display = "block";
+    }
+
+    function goBack() {
+      // ซ่อนผลลัพธ์และแสดงฟอร์มใหม่
+      document.getElementById("result").style.display = "none";
+      document.getElementById("form-container").style.display = "block";
+    }
+  </script>
+
+</body>
+
+</html>
